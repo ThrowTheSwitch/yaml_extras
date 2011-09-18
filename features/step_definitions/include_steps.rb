@@ -18,6 +18,37 @@ def read_yaml(f)
   YAML.load(File.read(f))
 end
 
+def apply_path(o, p)
+  p.inject(o) do |obj, key|
+    obj[key]
+  end
+end
+
+def find_path_to_key(key, obj)
+  def go(c, key, o)
+    if o.respond_to?(:has_key?) and o.has_key?(key)
+      c << key
+    else
+      case o
+        when Hash
+          o.each_pair do |k, v|
+            r = go(c.clone << k, key, v)
+            return r unless r.nil?
+          end
+        when Array
+          o.each_index do |i|
+            r = go(c.clone << i, key, o[i])
+            return r unless r.nil?
+          end
+        else 
+          nil
+      end
+    end
+  end
+
+  go([], key, obj)
+end
+
 Before do
   @yaml_extras = nil
   @tmpdir = Dir.tmpdir + "/cuke_tempdir"
