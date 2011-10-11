@@ -5,15 +5,14 @@ Feature: Include
   I want to be able to include the structure of one YAML file in another
 
   Scenario: Include external file
-    Given a directory
-    And a file named "main.yml" in the directory containing:
+    Given a file named "main.yml" containing:
       """
       ---
         a: 0
         b:
-          INCLUDE: external.yaml
+          INCLUDE: external.yml
       """
-    And a file named "external.yml" in the directory containing:
+    And a file named "external.yml" containing:
       """
       ---
         c: 1

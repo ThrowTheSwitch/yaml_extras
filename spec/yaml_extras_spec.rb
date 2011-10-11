@@ -62,20 +62,60 @@ describe YamlExtras do
   end
 
   describe :original do
-    it "should return the Hash representing the loaded YAML file" do
+    it "should cache and return the Hash representing the loaded YAML file" do
       mock(File).read("some_file.yml") {"---\na: 5\n"}
-      YamlExtras.new("some_file.yml").original.should == {"a" => 5}
+      ye = YamlExtras.new("some_file.yml")
+      ye.original.should == {"a" => 5}
+      ye.original.should == {"a" => 5}
+    end
+  end
+
+  describe :result do
+    it "should cache and return the result of applying integrate_includes" do
+      mock(File).read("some_file.yml") {"---\na: 5\n"}
+      ye = YamlExtras.new("some_file.yml")
+      ye.result.should == {"a" => 5}
+      ye.result.should == {"a" => 5}
     end
   end
 
   describe :integrate_includes do
+    it "should allow absolute paths" do
+      fs_root = File.expand_path "/"
+      fname = File.join(fs_root, "first.yml")
+
+      first = "---\na: 1\nINCLUDE: #{fname}\n"
+      yaml_body = "---\nb: 2\n"
+
+      mock(File).read("first.yml") { first }
+      mock(File).read(fname) { yaml_body }
+
+      YamlExtras.new("first.yml").result.should == { "a" => 1, "b" => 2 }
+    end
+
+    it "should use paths relative to the parent file" do
+      first = "---\nINCLUDE: second.yml\n"
+      second = "---\na: 1\n"
+
+      expected = { "a" => 1 }
+
+      expected_second_path = File.join(
+        File.dirname(File.expand_path("some_path/first.yml")),
+        "second.yml")
+
+      mock(File).read("some_path/first.yml") { first }
+      mock(File).read(expected_second_path) { second }
+
+      YamlExtras.new("some_path/first.yml").result.should == { "a" => 1 }
+    end
+
     it "should be hash with INCLUDEs integrated" do
       other = "---\nb: 2\n"
       input = "---\na: 1\nINCLUDE: other.yml\n"
       expect = { "a" => 1, "b" => 2 }
       
       mock(File).read("some_file.yml") { input }
-      mock(File).read("other.yml") { other }
+      mock(File).read(File.expand_path("other.yml")) { other }
 
       YamlExtras.new("some_file.yml").integrate_includes.should == expect
     end
@@ -88,8 +128,8 @@ describe YamlExtras do
       expect = { "a" => 1, "b" => 2, "c" => 3 }
 
       mock(File).read("first.yml")  { first  }
-      mock(File).read("second.yml") { second }
-      mock(File).read("third.yml")  { third  }
+      mock(File).read(File.expand_path("second.yml")) { second }
+      mock(File).read(File.expand_path("third.yml"))  { third  }
 
       YamlExtras.new("first.yml").integrate_includes.should == expect
     end
@@ -104,9 +144,9 @@ describe YamlExtras do
 
       expect = { "a" => { "c" => 100 }, "b" => { "c" => 100 } }
 
-      mock(File).read("first.yml")  { first  }
-      mock(File).read("second.yml") { second }
-      mock(File).read("second.yml") { second }
+      mock(File).read("first.yml") { first }
+      mock(File).read(File.expand_path("second.yml")) { second }
+      mock(File).read(File.expand_path("second.yml")) { second }
 
       YamlExtras.new("first.yml").integrate_includes.should == expect
     end
@@ -126,7 +166,7 @@ describe YamlExtras do
       second = "---\nb: 2\nINCLUDE: first.yml\n"
 
       mock(File).read("first.yml") { first }
-      mock(File).read("second.yml") { second }
+      mock(File).read(File.expand_path("second.yml")) { second }
 
       lambda {
           YamlExtras.new("first.yml").integrate_includes

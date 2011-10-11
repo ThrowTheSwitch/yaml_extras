@@ -10,38 +10,32 @@ $:.unshift(File.dirname(__FILE__) + '/../../lib')
 ###
 
 require 'yaml_extras'
-require 'tmpdir'
 require 'fileutils'
 require 'yaml'
 
 Before do
   @yaml_extras = nil
-  @tmpdir = Dir.tmpdir + "/cuke_tempdir"
-  @files = {}
+  @work_dir = "work_dir"
+  FileUtils.mkdir_p File.expand_path(@work_dir)
 end
 
 After do
-  if File.exists?(@tmpdir) and File.directory?(@tmpdir)
-    FileUtils.rm_rf @tmpdir
+  if File.exists?(@work_dir) and File.directory?(@work_dir)
+    FileUtils.rm_rf @work_dir
   end
 end
 
 ###
 
-Given /^a directory$/ do
-  Dir.mkdir @tmpdir
-end
-
-Given /^a file named "([^"]*)" in the directory containing:$/ do |name, string|
-  full_path = File.join(@tmpdir, name)
-  @files[name] = full_path
+Given /^a file named "([^"]*)" containing:$/ do |name, string|
+  full_path = File.join(@work_dir, name)
   File.open(full_path, 'w') do |f|
     f.write(string)
   end
 end
 
 When /^the file "([^"]*)" is processed$/ do |name|
-  @yaml_extras = YamlExtras.new(@files[name])
+  @yaml_extras = YamlExtras.new(File.join(@work_dir, name))
 end
 
 Then /^the result should be:$/ do |string|
