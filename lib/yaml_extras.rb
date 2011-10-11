@@ -5,35 +5,30 @@ class ObjectPathing
     end
   end
 
-  def self.find_path_to_key(key, obj)
-    go = lambda do |c, k, o|
-      if o.respond_to?(:has_key?) and o.has_key?(k)
-        c << k
-      else
-        case o
-          when Hash
-            unless o.empty?
-              o.each_pair do |j, v|
-                r = go.call(c.clone << j, k, v)
-                return r unless r.nil?
-              end
-              return nil
+  def self.find_paths_to_keys(keys, obj)
+    paths = []
+
+    go = lambda do |p, o|
+      case o
+        when Hash
+          o.each_pair do |k, v|
+            p_ = p.clone << k
+            if keys.include?(k)
+              paths << p_
             end
-          when Array
-            unless o.empty?
-              o.each_index do |i|
-                r = go.call(c.clone << i, k, o[i])
-                return r unless r.nil?
-              end
-              return nil
-            end
-          else 
-            nil
-        end
+            go.call(p_, v)
+          end
+        when Array
+          o.each_index do |i|
+            p_ = p.clone << i
+            go.call(p_, o[i])
+          end
       end
     end
 
-    go.call([], key, obj)
+    go.call([], obj)
+
+    paths
   end
 end
 
@@ -42,6 +37,8 @@ class YamlExtras
 
   def initialize(file_name)
     @original = YAML.load(File.read(file_name))
-    @result = @original
+  end
+
+  def integrate_includes
   end
 end
