@@ -1,4 +1,5 @@
 require 'pathname'
+require 'yaml'
 
 class ObjectPathing
   def self.apply_path(o, p)
