@@ -1,0 +1,8 @@
+---
+  top: "This is the top."
+  slot_1:
+    x: 200
+    INCLUDE: include1.yml
+  slot_2:
+    z: 42
+    INCLUDE: include2.yml
