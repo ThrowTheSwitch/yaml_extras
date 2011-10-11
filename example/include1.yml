@@ -1,5 +1,0 @@
----
-  include1: "This is include 1."
-  slot_2:
-    a: 999
-    INCLUDE: include2.yml

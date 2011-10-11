@@ -1,0 +1,77 @@
+= YamlExtras
+
+YamlExtras provides a set of utilities to marginally expand the YAML file format.
+
+== Using YamlExtras
+
+=== File Inclusion
+
+When dealing with large configuration files, occasionally it can be useful to
+break the file up into multiple pieces. Take for example the following yaml:
+
+    ---
+    name: John
+    date_of_birth:
+      year: 1986
+      month: 1
+      day: 30
+    location:
+      planet: Earth
+      country: USA
+      state: Michigan
+
+Using the file inclusion support in YamlExtras, we can break this up into a
+few different files:
+
+
+==== main.yml
+
+    ---
+    name: John
+    date_of_birth:
+      INCLUDE: dob.yml
+    location:
+      INCLUDE: location.yml
+
+==== dob.yml
+
+    ---
+    year: 1986
+    month: 1
+    day: 30
+
+==== location.yml
+
+    ---
+    planet: Earth
+    country: USA
+    state: Michigan
+
+We can produce a merged YAML file on stdout with the following:
+
+    require 'yaml_extras'
+
+    puts YamlExtras.new("main.yml").result.to_yaml
+
+This snippet produces the original document seen here:
+
+    --- 
+    name: John
+    date_of_birth: 
+      year: 1986
+      month: 1
+      day: 30
+    location: 
+      planet: Earth
+      country: USA
+      state: Michigan
+
+=== Notes
+
+There are a few things to keep in mind:
+* Cyclic inclues are not allowed and will cause an exception.
+* Includes cannot be referenced from an Array.
+* All YAML files are evaluated independently and merged based on the Ruby
+  structure.
+* Built-in YAML features like references and merging do not impact more than
+  the file in which they appear.

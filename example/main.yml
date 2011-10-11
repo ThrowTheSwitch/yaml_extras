@@ -1,0 +1,6 @@
+---
+name: John
+date_of_birth:
+  INCLUDE: dob.yml
+location:
+  INCLUDE: location.yml
