@@ -10,12 +10,19 @@ Feature: Include
       """
       ---
         a: 0
-        INCLUDE: external.yaml
+        b:
+          INCLUDE: external.yaml
       """
     And a file named "external.yml" in the directory containing:
       """
       ---
-        b: 1
+        c: 1
       """
-    Then the result contains the data from "external.yml" in "main.yml" at the level of INCLUDE
-    And the INCLUDE key is deleted
+    When the file "main.yml" is processed
+    Then the result should be:
+      """
+      ---
+        a: 0
+        b:
+          c: 1
+      """
